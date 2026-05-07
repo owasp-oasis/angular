@@ -7,7 +7,7 @@
  */
 
 import {Rule, SchematicContext, SchematicsException, Tree} from '@angular-devkit/schematics';
-import {join, relative} from 'path';
+import {relative, resolve, sep} from 'path';
 import ts from 'typescript';
 
 import {normalizePath} from '../../utils/change_tracker';
@@ -31,7 +31,13 @@ export function migrate(options: Options): Rule {
           'Cannot run inject migration outside of the current project.',
         );
       }
-      pathToMigrate = normalizePath(join(basePath, options.path));
+      const resolvedPath = resolve(basePath, options.path);
+      if (!resolvedPath.startsWith(basePath + sep) && resolvedPath !== basePath) {
+        throw new SchematicsException(
+          'Cannot run inject migration outside of the current project.',
+        );
+      }
+      pathToMigrate = normalizePath(resolvedPath);
     }
 
     const {buildPaths, testPaths} = await getProjectTsConfigPaths(tree);
