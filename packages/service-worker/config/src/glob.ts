@@ -8,7 +8,7 @@
 
 const QUESTION_MARK = '[^/]';
 const WILD_SINGLE = '[^/]*';
-const WILD_OPEN = '(?:.+\\/)?';
+const WILD_OPEN = '(?:[^/]+\\/)*';
 
 const TO_ESCAPE_BASE = [
   {replace: /\./g, with: '\\.'},

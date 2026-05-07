@@ -11,6 +11,9 @@ import {Filesystem} from './filesystem';
 import {globToRegex} from './glob';
 import {AssetGroup, Config} from './in';
 
+// 1000-char limit bounds glob-to-regex expansion complexity, mitigating ReDoS (CWE-1333); value derived from OWASP input validation guidance (OWASP_GUIDELINE).
+const MAX_GLOB_PATTERN_LENGTH = 1000;
+
 const DEFAULT_NAVIGATION_URLS = [
   '/**', // Include all URLs.
   '!/**/*.*', // Exclude URLs to files (containing a file extension in the last segment).
@@ -146,19 +149,21 @@ async function processInBatches<I, O>(
 }
 
 function globListToMatcher(globs: string[]): (file: string) => boolean {
-  const patterns = globs.map((pattern) => {
-    if (pattern.startsWith('!')) {
-      return {
-        positive: false,
-        regex: new RegExp('^' + globToRegex(pattern.slice(1)) + '$'),
-      };
-    } else {
-      return {
-        positive: true,
-        regex: new RegExp('^' + globToRegex(pattern) + '$'),
-      };
-    }
-  });
+  const patterns = globs
+    .filter((pattern) => pattern.length <= MAX_GLOB_PATTERN_LENGTH)
+    .map((pattern) => {
+      if (pattern.startsWith('!')) {
+        return {
+          positive: false,
+          regex: new RegExp('^' + globToRegex(pattern.slice(1)) + '$'),
+        };
+      } else {
+        return {
+          positive: true,
+          regex: new RegExp('^' + globToRegex(pattern) + '$'),
+        };
+      }
+    });
   return (file: string) => matches(file, patterns);
 }
 
