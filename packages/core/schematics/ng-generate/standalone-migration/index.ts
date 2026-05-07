@@ -39,7 +39,13 @@ export function migrate(options: Options): Rule {
     const allPaths = [...buildPaths, ...testPaths];
     // TS and Schematic use paths in POSIX format even on Windows. This is needed as otherwise
     // string matching such as `sourceFile.fileName.startsWith(pathToMigrate)` might not work.
+    const normalizedBase = normalizePath(basePath);
     const pathToMigrate = normalizePath(join(basePath, options.path));
+    if (!pathToMigrate.startsWith(normalizedBase + '/') && pathToMigrate !== normalizedBase) {
+      throw new SchematicsException(
+        'Cannot run standalone migration outside of the current project.',
+      );
+    }
     let migratedFiles = 0;
 
     if (!allPaths.length) {
