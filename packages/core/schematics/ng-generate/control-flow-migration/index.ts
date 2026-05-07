@@ -37,6 +37,12 @@ export function migrate(options: Options): Rule {
       }
 
       pathToMigrate = normalizePath(join(basePath, options.path));
+      const normalizedBase = normalizePath(basePath);
+      if (!pathToMigrate.startsWith(normalizedBase + '/') && pathToMigrate !== normalizedBase) {
+        throw new SchematicsException(
+          'Cannot run control flow migration outside of the current project.',
+        );
+      }
       if (pathToMigrate.trim() !== '') {
         allPaths.push(pathToMigrate);
       }
