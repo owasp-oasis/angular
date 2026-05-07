@@ -63,10 +63,14 @@ export class LanguageServiceAdapter implements NgCompilerAdapter {
     // would generally be the desired behavior.
     if (url.endsWith('.css')) {
       const styleUrl = p.resolve(fromFile, '..', url);
-      for (const ext of PRE_COMPILED_STYLE_EXTENSIONS) {
-        const precompiledFileUrl = styleUrl.replace(/\.css$/, ext);
-        if (this.fileExists(precompiledFileUrl)) {
-          return precompiledFileUrl;
+      const projectRoot = p.resolve(this.project.getCurrentDirectory());
+      const normalizedRoot = projectRoot.endsWith(p.sep) ? projectRoot : projectRoot + p.sep;
+      if (styleUrl.startsWith(normalizedRoot) || styleUrl === projectRoot) {
+        for (const ext of PRE_COMPILED_STYLE_EXTENSIONS) {
+          const precompiledFileUrl = styleUrl.replace(/\.css$/, ext);
+          if (this.fileExists(precompiledFileUrl)) {
+            return precompiledFileUrl;
+          }
         }
       }
     }
