@@ -145,8 +145,15 @@ async function processInBatches<I, O>(
   );
 }
 
+const MAX_GLOB_LENGTH = 1000;
+
 function globListToMatcher(globs: string[]): (file: string) => boolean {
   const patterns = globs.map((pattern) => {
+    if (pattern.length > MAX_GLOB_LENGTH) {
+      throw new Error(
+        `Glob pattern exceeds the maximum allowed length of ${MAX_GLOB_LENGTH} characters.`,
+      );
+    }
     if (pattern.startsWith('!')) {
       return {
         positive: false,
