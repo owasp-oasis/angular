@@ -16,6 +16,15 @@ import {CompilationUnitData} from './unit_data';
 import {executeGlobalMetaPhase} from '../../../../utils/tsurge/executors/global_meta_exec';
 import {synchronouslyCombineUnitData} from '../../../../utils/tsurge/helpers/combine_units';
 
+function resolveFilePath(filePath: string): string {
+  const resolved = path.resolve(filePath);
+  const base = path.resolve(process.cwd());
+  if (!resolved.startsWith(base + path.sep) && resolved !== base) {
+    throw new Error('Path resolves outside of the working directory');
+  }
+  return resolved;
+}
+
 main().catch((e) => {
   console.error(e);
   process.exitCode = 1;
@@ -26,23 +35,23 @@ async function main() {
   const migration = new SignalInputMigration({insertTodosForSkippedFields: true});
 
   if (mode === 'extract') {
-    const analyzeResult = await executeAnalyzePhase(migration, path.resolve(args[0]));
+    const analyzeResult = await executeAnalyzePhase(migration, resolveFilePath(args[0]));
     process.stdout.write(JSON.stringify(analyzeResult));
   } else if (mode === 'combine-all') {
-    const unitPromises = args.map((f) => readUnitMeta(path.resolve(f)));
+    const unitPromises = args.map((f) => readUnitMeta(resolveFilePath(f)));
     const units = await Promise.all(unitPromises);
     const mergedResult = await synchronouslyCombineUnitData(migration, units);
 
     process.stdout.write(JSON.stringify(mergedResult));
   } else if (mode === 'global-meta') {
-    const metaResult = await executeGlobalMetaPhase(migration, await readUnitMeta(args[0]));
+    const metaResult = await executeGlobalMetaPhase(migration, await readUnitMeta(resolveFilePath(args[0])));
 
     process.stdout.write(JSON.stringify(metaResult));
   } else if (mode === 'migrate') {
     const {replacements, projectRoot} = await executeMigratePhase(
       migration,
-      JSON.parse(fs.readFileSync(path.resolve(args[1]), 'utf8')) as CompilationUnitData,
-      path.resolve(args[0]),
+      JSON.parse(fs.readFileSync(resolveFilePath(args[1]), 'utf8')) as CompilationUnitData,
+      resolveFilePath(args[0]),
     );
 
     writeMigrationReplacements(replacements, projectRoot);
