@@ -160,15 +160,18 @@ export abstract class BackendService {
 
   /**
    * Apply query/search parameters as a filter over the collection
-   * This impl only supports RegExp queries on string properties of the collection
+   * This impl supports substring queries on string properties of the collection
    * ANDs the conditions together
    */
   protected applyQuery(collection: any[], query: Map<string, string[]>): any[] {
-    // extract filtering conditions - {propertyName, RegExps) - from query/search parameters
-    const conditions: {name: string; rx: RegExp}[] = [];
-    const caseSensitive = this.config.caseSensitiveSearch ? undefined : 'i';
+    // extract filtering conditions - {propertyName, value} - from query/search parameters
+    const conditions: {name: string; value: string}[] = [];
+    const caseSensitive = this.config.caseSensitiveSearch;
     query.forEach((value: string[], name: string) => {
-      value.forEach((v) => conditions.push({name, rx: new RegExp(decodeURI(v), caseSensitive)}));
+      value.forEach((v) => {
+        const decoded = decodeURI(v);
+        conditions.push({name, value: caseSensitive ? decoded : decoded.toLowerCase()});
+      });
     });
 
     const len = conditions.length;
@@ -176,14 +179,16 @@ export abstract class BackendService {
       return collection;
     }
 
-    // AND the RegExp conditions
+    // AND the substring conditions
     return collection.filter((row) => {
       let ok = true;
       let i = len;
       while (ok && i) {
         i -= 1;
         const cond = conditions[i];
-        ok = cond.rx.test(row[cond.name]);
+        const rowValue = String(row[cond.name] ?? '');
+        const target = caseSensitive ? rowValue : rowValue.toLowerCase();
+        ok = target.includes(cond.value);
       }
       return ok;
     });
