@@ -52,8 +52,12 @@ export function migrateTemplateToSelfClosingTags(template: string): {
 }
 
 function replaceWithSelfClosingTag(html: string, tagName: string) {
+  if (tagName.length > 100) {
+    return html;
+  }
+  const escapedTagName = tagName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = new RegExp(
-    `<\\s*${tagName}\\s*([^>]*?(?:"[^"]*"|'[^']*'|[^'">])*)\\s*>([\\s\\S]*?)<\\s*/\\s*${tagName}\\s*>`,
+    `<\\s*${escapedTagName}\\s*([^>]*?(?:"[^"]*"|'[^']*'|[^'">])*)\\s*>([\\s\\S]*?)<\\s*/\\s*${escapedTagName}\\s*>`,
     'gi',
   );
   return html.replace(pattern, (_, content) => `<${tagName}${content ? ` ${content}` : ''} />`);
