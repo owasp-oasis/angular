@@ -114,7 +114,7 @@ localMessageBus.on('backendReady', () => {
 });
 
 const proxyEventFromWindowToDevToolsExtension = (event: MessageEvent) => {
-  if (event.source === window && event.data && event.data.__NG_DEVTOOLS_EVENT__) {
+  if (event.source === window && event.origin === window.location.origin && event.data && event.data.__NG_DEVTOOLS_EVENT__) {
     try {
       chrome.runtime.sendMessage(event.data);
     } catch (e) {
