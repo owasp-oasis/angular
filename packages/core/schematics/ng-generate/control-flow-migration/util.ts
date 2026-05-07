@@ -7,7 +7,7 @@
  */
 
 import {Attribute, Element, Node, ParseTreeResult, visitAll} from '@angular/compiler';
-import {dirname, join} from 'path';
+import {dirname, isAbsolute, resolve} from 'path';
 import ts from 'typescript';
 
 import {
@@ -236,7 +236,15 @@ function analyzeDecorators(
       case 'templateUrl':
         // Leave the end as undefined which means that the range is until the end of the file.
         if (ts.isStringLiteralLike(prop.initializer)) {
-          const path = join(dirname(sourceFile.fileName), prop.initializer.text);
+          const templateUrlValue = prop.initializer.text;
+          if (isAbsolute(templateUrlValue) || templateUrlValue.includes('..')) {
+            break;
+          }
+          const baseDir = dirname(sourceFile.fileName);
+          const path = resolve(baseDir, templateUrlValue);
+          if (!path.startsWith(resolve(baseDir))) {
+            break;
+          }
           AnalyzedFile.addRange(path, sourceFile, analyzedFiles, {
             start: 0,
             node: prop,
