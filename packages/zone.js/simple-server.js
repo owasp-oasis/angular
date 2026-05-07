@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 
-const http = require('http');
+const https = require('https');
 const path = require('path');
 const fs = require('fs');
 let server;
@@ -42,4 +42,8 @@ function requestHandler(req, res) {
   }
 }
 
-server = http.createServer(requestHandler).listen(8080);
+const tlsOptions = {
+  key: fs.readFileSync(process.env.HTTPS_KEY_PATH || 'server.key'),
+  cert: fs.readFileSync(process.env.HTTPS_CERT_PATH || 'server.cert'),
+};
+server = https.createServer(tlsOptions, requestHandler).listen(8080);
