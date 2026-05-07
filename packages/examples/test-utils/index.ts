@@ -19,7 +19,7 @@ export async function verifyNoBrowserErrors() {
   browserLog.forEach((logEntry) => {
     const msg = logEntry.message;
 
-    console.log('>> ' + msg, logEntry);
+    console.log('>>', msg, logEntry);
 
     if (logEntry.level.value >= logging.Level.INFO.value) {
       collectedErrors.push(msg);
