@@ -27,6 +27,12 @@ export function migrate(options: Options): Rule {
     // TS and Schematic use paths in POSIX format even on Windows. This is needed as otherwise
     // string matching such as `sourceFile.fileName.startsWith(pathToMigrate)` might not work.
     const pathToMigrate = normalizePath(join(basePath, options.path));
+    const normalizedBase = normalizePath(basePath);
+    if (pathToMigrate !== normalizedBase && !pathToMigrate.startsWith(normalizedBase + '/')) {
+      throw new SchematicsException(
+        'Cannot run route lazy loading migration outside of the current project.',
+      );
+    }
 
     if (!buildPaths.length) {
       throw new SchematicsException(
