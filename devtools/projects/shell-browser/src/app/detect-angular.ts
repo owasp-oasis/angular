@@ -39,7 +39,7 @@ function detectAngular(win: Window): void {
   };
 
   // For the background script to toggle the icon.
-  win.postMessage(detection, '*');
+  win.postMessage(detection, win.location.origin);
 
   // For the content script to inject the backend.
   detectAngularMessageBus.emit('detectAngular', [
