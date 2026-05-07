@@ -63,7 +63,7 @@ export class IFrameMessageBus extends MessageBus<Events> {
         __ignore_ng_zone__: this.source === 'angular-devtools',
         __NG_DEVTOOLS_EVENT__: true,
       },
-      '*',
+      window.location.origin,
     );
     return true;
   }
