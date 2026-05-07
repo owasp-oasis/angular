@@ -17,15 +17,20 @@ function errorFilenameHandler() {
       const file = params.get('file');
       if (file) {
         const [filepath, line, column] = file.split(':');
-        window.parent.postMessage(
-          {
-            type: 'openFileAtLocation',
-            file: filepath,
-            line: parseInt(line, 10),
-            character: parseInt(column, 10),
-          },
-          '*',
-        );
+        const parentOrigin =
+          window.location.ancestorOrigins?.[0] ??
+          (document.referrer ? new URL(document.referrer).origin : null);
+        if (parentOrigin) {
+          window.parent.postMessage(
+            {
+              type: 'openFileAtLocation',
+              file: filepath,
+              line: parseInt(line, 10),
+              character: parseInt(column, 10),
+            },
+            parentOrigin,
+          );
+        }
       }
       return new Response(null, {status: 200});
     }
