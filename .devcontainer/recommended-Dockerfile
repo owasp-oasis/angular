@@ -9,8 +9,9 @@ LABEL name="Angular dev environment" \
 
 EXPOSE 4200 4201 4205 4206 9876
 
-# Switch to `root`.
+# Switch to `root` for any privileged setup, then drop back to non-root.
 USER root
 
 # Go! (And keep going.)
+USER node
 CMD ["tail", "--follow", "/dev/null"]
