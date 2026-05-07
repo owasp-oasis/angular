@@ -96,7 +96,7 @@ export class SamePageMessageBus extends MessageBus<Events> {
         __ignore_ng_zone__: true,
         __NG_DEVTOOLS_EVENT__: true,
       },
-      '*',
+      window.location.origin,
     );
     return true;
   }
