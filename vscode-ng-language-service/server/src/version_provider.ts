@@ -80,7 +80,11 @@ function resolveTsServerFromTsdk(tsdk: string, probeLocations: string[]): NodeMo
   if (path.isAbsolute(tsdk)) {
     probeLocations = [tsdk];
   } else {
-    probeLocations = probeLocations.map((location) => path.join(location, tsdk));
+    const normalizedTsdk = path.normalize(tsdk);
+    if (normalizedTsdk.startsWith('..')) {
+      return undefined;
+    }
+    probeLocations = probeLocations.map((location) => path.join(location, normalizedTsdk));
   }
   for (const location of probeLocations) {
     const tsserverlib = path.join(location, 'tsserverlibrary.js');
