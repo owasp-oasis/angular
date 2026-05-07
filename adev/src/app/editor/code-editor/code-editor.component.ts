@@ -34,6 +34,7 @@ import {DownloadManager} from '../download-manager.service';
 import {LoadingStep} from '../enums/loading-steps';
 import {FirebaseStudioLauncher} from '../firebase-studio-launcher.service';
 import {injectEmbeddedTutorialManager} from '../inject-embedded-tutorial-manager';
+import {NodeRuntimeSandbox} from '../node-runtime-sandbox.service';
 import {NodeRuntimeState} from '../node-runtime-state.service';
 import {StackBlitzOpener} from '../stackblitz-opener.service';
 import {CodeMirrorEditor} from './code-mirror-editor.service';
@@ -74,6 +75,7 @@ export class CodeEditor {
 
   private readonly destroyRef = inject(DestroyRef);
 
+  private readonly nodeRuntimeSandbox = inject(NodeRuntimeSandbox);
   private readonly nodeRuntimeState = inject(NodeRuntimeState);
   private readonly codeMirrorEditor = inject(CodeMirrorEditor);
   private readonly diagnosticsState = inject(DiagnosticsState);
@@ -100,6 +102,8 @@ export class CodeEditor {
   );
 
   readonly TerminalType = TerminalType;
+
+  private previewOrigin: string | null = null;
 
   protected readonly displayErrorsBox = signal<boolean>(false);
   protected readonly errors = signal<DiagnosticWithLocation[]>([]);
@@ -170,8 +174,27 @@ export class CodeEditor {
       openFile(file, line, character);
     };
 
+    // Track the current preview iframe origin for postMessage validation
+    this.nodeRuntimeSandbox.previewUrl$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((url) => {
+        if (url) {
+          try {
+            this.previewOrigin = new URL(url).origin;
+          } catch {
+            this.previewOrigin = null;
+          }
+        } else {
+          this.previewOrigin = null;
+        }
+      });
+
     // Listen for postMessage from preview iframe (Vite error overlay)
     const handlePostMessage = (event: MessageEvent) => {
+      // Validate origin against the known preview iframe origin
+      if (!this.previewOrigin || event.origin !== this.previewOrigin) {
+        return;
+      }
       // Check if this is an openFileAtLocation message
       if (event.data?.type === 'openFileAtLocation') {
         const {file, line, character} = event.data;
